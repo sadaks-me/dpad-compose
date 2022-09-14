@@ -2,52 +2,86 @@ package dev.berggren
 
 import android.view.KeyEvent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.Surface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun Focusable(
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     onFocusChanged: ((isFocussed: Boolean) -> Unit)? = null,
     onLeft: (() -> Unit)? = null,
     onRight: (() -> Unit)? = null,
     onUp: (() -> Unit)? = null,
     onDown: (() -> Unit)? = null,
+    focusRequester: FocusRequester = FocusRequester(),
     magnify: Boolean = true,
-    borderWidth: Dp = 4.dp,
-    unfocusedBorderColor: Color = Color(0x00f39c12),
-    focusedBorderColor: Color = Color(0xfff39c12),
+    visible: Boolean = true,
+    cardElevation: Dp = 3.dp,
+    shape: Shape = RoundedCornerShape(4.dp),
+    borderWidth: Dp = 2.dp,
+    unfocusedBorderColor: Color = Color.Transparent,
+    focusedBorderColor: Color = highlightColor,
+    indication: Indication? = null,
+    scrollPadding: Rect = Rect.Zero,
+    isDefault: Boolean = false,
     content: @Composable (isFocused: Boolean) -> Unit,
 ) {
+
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val boxInteractionSource = remember { MutableInteractionSource() }
     val isItemFocused by boxInteractionSource.collectIsFocusedAsState()
 
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isItemFocused) 3.dp else 1.dp
+    )
     val animatedScale by animateFloatAsState(
         targetValue = if (isItemFocused) 1f else (if (magnify) 0.85f else 1f)
     )
     val animatedBorderColor by animateColorAsState(
         targetValue = if (isItemFocused) focusedBorderColor else unfocusedBorderColor
     )
+    var previousFocus: FocusInteraction.Focus? by remember {
+        mutableStateOf(null)
+    }
     var previousPress: PressInteraction.Press? by remember {
         mutableStateOf(null)
     }
@@ -55,6 +89,14 @@ fun Focusable(
 
     var boxSize by remember {
         mutableStateOf(IntSize(0, 0))
+    }
+    val inputMode = LocalInputModeManager.current
+
+    LaunchedEffect(inputMode.inputMode) {
+        delay(10)
+        if (isDefault) {
+            focusRequester.requestFocus()
+        }
     }
 
     LaunchedEffect(isItemFocused) {
@@ -70,19 +112,43 @@ fun Focusable(
     }
 
     Box(
-        Modifier
+        modifier = Modifier
+            .alpha(if (visible) 1f else 0f)
             .graphicsLayer {
                 scaleX = animatedScale
                 scaleY = animatedScale
             }
-            .onGloballyPositioned {
-                boxSize = it.size
+            .bringIntoViewRequester(bringIntoViewRequester)
+            .onSizeChanged {
+                boxSize = it
             }
-            .clickable(
+            .indication(
                 interactionSource = boxInteractionSource,
-                indication = rememberRipple()
-            ) {
-                onClick?.invoke()
+                indication = indication ?: rememberRipple()
+            )
+            .onFocusChanged { focusState ->
+                if (focusState.isFocused) {
+                    val newFocusInteraction = FocusInteraction.Focus()
+                    scope.launch {
+                        boxInteractionSource.emit(newFocusInteraction)
+                    }
+                    scope.launch {
+                        val visibilityBounds = Rect(
+                            left = -1f * scrollPadding.left,
+                            top = -1f * scrollPadding.top,
+                            right = boxSize.width + scrollPadding.right,
+                            bottom = boxSize.height + scrollPadding.bottom
+                        )
+                        bringIntoViewRequester.bringIntoView(visibilityBounds)
+                    }
+                    previousFocus = newFocusInteraction
+                } else {
+                    previousFocus?.let {
+                        scope.launch {
+                            boxInteractionSource.emit(FocusInteraction.Unfocus(it))
+                        }
+                    }
+                }
             }
             .onKeyEvent {
                 if (!listOf(Key.DirectionCenter, Key.Enter).contains(it.key)) {
@@ -138,12 +204,25 @@ fun Focusable(
                     else -> false
                 }
             }
-            .focusable(interactionSource = boxInteractionSource)
+            .focusRequester(focusRequester)
+            .focusTarget()
             .border(
-                width = borderWidth,
-                color = animatedBorderColor
-            ),
+                width = if (isItemFocused) borderWidth else 0.dp,
+                color = animatedBorderColor,
+                shape = shape
+            ).focusable(enabled),
     ) {
-        content(isItemFocused)
+        Surface(
+            elevation = animatedElevation,
+            color = primaryColor20,
+            shape = shape,
+        ) {
+            Card(
+                backgroundColor = primaryColor20,
+                shape = shape,
+            ) {
+                content(isItemFocused)
+            }
+        }
     }
 }
