@@ -1,10 +1,12 @@
 package dev.berggren.ui.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -40,6 +42,8 @@ object LocalNavHostController {
     val navController = rememberNavController()
     val viewModel = hiltViewModel<AppViewModel>()
     val selectedMenu = viewModel.selectedMenu.observeAsState(null)
+    val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     LaunchedEffect(navController) {
         navigator.destinations.collect {
@@ -75,6 +79,13 @@ object LocalNavHostController {
 
     CompositionLocalProvider(LocalNavController provides navController,
         content = {
+            BackHandler(
+                enabled = navController.currentDestination?.route?.contains("player") == false,
+            ) {
+                navController.currentDestination?.route?.let {
+                    viewModel.checkBackHandler(context, it, focusManager)
+                }
+            }
             Row() {
                 Menu(selectedMenu.value, menuState.value!!)
                 Scaffold {

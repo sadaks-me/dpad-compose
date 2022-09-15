@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import dev.berggren.ui.EmptyPage
 import dev.berggren.ui.Home
-import dev.berggren.ui.menu.MenuStateEnum
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class)
 @Composable

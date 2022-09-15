@@ -1,5 +1,8 @@
 package dev.berggren.ui.app
 
+import android.app.Activity
+import android.content.Context
+import androidx.compose.ui.focus.FocusManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -47,5 +50,29 @@ class AppViewModel @Inject constructor(
             }
             MenuStateEnum.HIDDEN -> { }
         }
+    }
+
+    private val menuPages = listOf(
+        "HomeScreen.Dash.route",
+        "EmptyScreen.Page.route"
+    )
+
+    fun checkBackHandler(context: Context, route: String, focusManager: FocusManager) {
+        when {
+            menuPages.contains(route) -> {
+                if (menuState.value == MenuStateEnum.CLOSED) {
+                    menuManager.open()
+                } else if (menuState.value == MenuStateEnum.OPEN) {
+                    minimizeApp(context)
+                }
+            }
+            else -> {
+                pop()
+            }
+        }
+    }
+
+    private fun minimizeApp(context: Context) {
+        (context as Activity).moveTaskToBack(false)
     }
 }

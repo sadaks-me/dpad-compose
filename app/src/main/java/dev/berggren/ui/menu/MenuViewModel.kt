@@ -19,15 +19,13 @@ class MenuViewModel @Inject constructor(
 
     override val coroutineContext: CoroutineContext = coroutineContextProvider.io
 
-
     private val _selectedMenuOption = MutableLiveData(MenuOptionEnum.HOME)
     val selectedMenuOption = _selectedMenuOption as LiveData<MenuOptionEnum>
 
     private var shouldSetMenuItem: Boolean = true
-
     fun selectMenuOption(menuItemModel: MenuItemModel, replace: Boolean = true) {
         _selectedMenuOption.value = menuItemModel.menuOptionEnum
-        print("pushing route: ${menuItemModel.route}")
+        println("pushing route: ${menuItemModel.route}")
         navigator.push(menuItemModel.route) {
             if (replace) {
                 this.popUpTo("/") {

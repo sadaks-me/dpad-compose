@@ -76,7 +76,7 @@ fun <T> ScrollableGrid(
 }
 
 @Stable
-data class GridPosition(val rowIndex: Int, val columnIndex: Int)
+data class GridPosition(val rowIndex: Int?, val columnIndex: Int?)
 
 @Composable
 fun ColoredBox(

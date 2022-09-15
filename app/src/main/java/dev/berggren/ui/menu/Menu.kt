@@ -4,13 +4,15 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -23,11 +25,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.berggren.*
-import dev.berggren.R.*
+import dev.berggren.R.drawable
 import dev.berggren.ui.navigation.HomeScreen
 import dev.berggren.ui.navigation.Screen
 
@@ -62,12 +63,11 @@ fun Menu(
     }
 
     val focusRequesters = remember(menuItems) { Array(menuItems.size) { FocusRequester() } }
-
     Box(
         Modifier
             .fillMaxHeight()
             .width(animatedWidth)
-            .background(if(expanded) darkGradientColor else DashboardBackground)
+            .background(if (expanded) darkGradientColor else DashboardBackground)
             .onFocusChanged {
                 if (it.isFocused && menuState != MenuStateEnum.OPEN) {
                     viewModel.menuManager.open()
@@ -116,7 +116,9 @@ fun MenuItem(
     Row(
         Modifier
             .height(30.dp)
-            .width(143.dp).background(DashboardBackground), horizontalArrangement = Arrangement.Start
+            .width(143.dp)
+            .background(DashboardBackground),
+        horizontalArrangement = Arrangement.Start
     ) {
         Box {
             ColoredBox(
