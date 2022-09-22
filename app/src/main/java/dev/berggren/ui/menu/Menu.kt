@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.berggren.*
 import dev.berggren.R.drawable
+import dev.berggren.ui.focusable.Focusable
 import dev.berggren.ui.navigation.HomeScreen
 import dev.berggren.ui.navigation.Screen
 
@@ -67,7 +68,7 @@ fun Menu(
         Modifier
             .fillMaxHeight()
             .width(animatedWidth)
-            .background(if (expanded) darkGradientColor else DashboardBackground)
+            .background(if (expanded) darkGradientColor else Color.Transparent)
             .onFocusChanged {
                 if (it.isFocused && menuState != MenuStateEnum.OPEN) {
                     viewModel.menuManager.open()
@@ -124,7 +125,7 @@ fun MenuItem(
             ColoredBox(
                 height = 30.dp,
                 width = 30.dp,
-                color = if (isSelected) highlightColor else darkGradientColor
+                color = if (isSelected) highlightColor else trainerBgColor
             )
             if (item.iconId != 0)
                 Icon(

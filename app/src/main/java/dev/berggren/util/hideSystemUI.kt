@@ -40,3 +40,13 @@ fun Activity.hideSystemUI() {
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
     }
 }
+
+fun String.pascalCase(): String {
+    val split = this.split(" ")
+    var newString = ""
+    for (i in split.indices) {
+        newString += split[i].substring(0, 1).uppercase() + split[i].substring(1, split[i].length).lowercase() + " "
+    }
+
+    return newString.trimEnd()
+}

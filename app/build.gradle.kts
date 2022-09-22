@@ -51,6 +51,9 @@ kapt {
 }
 
 dependencies {
+    implementation ("androidx.compose.material3:material3:1.0.0-beta02")
+    implementation ("androidx.compose.material3:material3-window-size-class:1.0.0-beta02")
+    implementation ("com.google.accompanist:accompanist-navigation-animation:0.26.3-beta")
     implementation("com.google.accompanist:accompanist-pager:0.26.3-beta")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.5.1")
